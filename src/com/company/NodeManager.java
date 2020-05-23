@@ -47,6 +47,21 @@ public class NodeManager {
         return false;
     }
 
+    public Node mostFreeNode() {
+        Node tempMostFreeNode = null;
+
+        for (int i = 0; i < connectedNodes.size(); i++) {
+            Node listNode = (Node) connectedNodes.get(i);
+                if (i == 0) {
+                    tempMostFreeNode = listNode;
+                }
+                if (listNode.getCurrentUtilisation() < tempMostFreeNode.getCurrentUtilisation()) {
+                    tempMostFreeNode = listNode;
+                }
+        }
+        return tempMostFreeNode;
+    }
+
     public int machinesOnlineNumber() {
         return connectedNodes.size();
     }
