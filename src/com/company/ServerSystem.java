@@ -1,97 +1,93 @@
 package com.company;
 
-import java.io.IOException;
 import java.net.*;
 
 public class ServerSystem {
-    GUI screen = new GUI(this);
-
     private NodeManager nodeManager = new NodeManager();
     private WorkManager workManager = new WorkManager();
-
     private int serverPort;
+    private InetAddress serverIP;
 
-    public ServerSystem(int port) {
-        screen.start();
-        serverPort = port;
+    public ServerSystem(int serverPort) {
+        this.serverPort = serverPort;
+        try {
+            serverIP = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
+    public InetAddress getServerIP() {
+        return serverIP;
+    }
     public int getServerPort() {
         return serverPort;
     }
 
-    private void shutdown() {
-        System.out.println("Turning off");
-        System.exit(0);
+    public void shutdown() {
+        System.out.println("There is work in progress: " + workManager.isWorkInProgress());
+        if (workManager.isWorkInProgress() || workManager.isWorkAvailable()){
+            System.out.println("Unable to shutdown due to work in progress!");
+        } else {
+            nodeManager.shutdownHostConnections();
+            System.out.println("Turning off");
+            System.exit(0);
+        }
     }
 
-    private Node createNewNode(InetAddress nodeIP, int nodePort) {
-        String nodeName = String.format("Node%s", nodeManager.machinesOnlineNumber() + 1);
-        Node newNode = new Node(nodeName, nodeIP, nodePort);
+    private Node createNewNode(InetAddress nodeIP, int nodePort, int inputMaxJobs) {
+        int nodeID = nodeManager.getNextNodeID();
+        Node newNode = new Node(this, nodeID, nodeIP, nodePort, inputMaxJobs);
         nodeManager.addNewMachine(newNode);
         return newNode;
     }
 
-    public Work createNewWork(int duration) {
-        Work newWork = new Work(workManager.getNextWorkID(),duration);
-        workManager.addNewWork(newWork);
+    public void createNewWork(int duration) {
+        int workID = workManager.getNextWorkID();
+        Work newWork = new Work(this, workID, duration);
+        workManager.addWork(newWork);
         Node tempNode = assignWorkCreated();
         if (tempNode != null){
-            System.out.println("Work assigned to " + tempNode.getNodeName());
+            System.out.println("Work assigned to " + tempNode.getNodeID());
             newWork.setWorkerNode(tempNode);
-            workManager.startWork(newWork);
         } else {
             System.out.println("Work not assignable. Adding to backlog.");
         }
-        return newWork;
     }
 
     private Node assignWorkCreated() {
         String messageToSend;
-        Node availableNode = nodeManager.mostFreeNode();
-        Work availableWork = workManager.getAvailableWork();
-
-        if (availableNode != null) {
-            if (availableWork != null) {
+        if (workManager.isWorkAvailable()) {
+            if (nodeManager.getMostFreeNode() == null) {
+                return null;
+            } else {
+                Node availableNode = nodeManager.getMostFreeNode();
+                Work availableWork = workManager.getAvailableWork();
                 messageToSend = "WORK," + availableWork.getWorkID() + "," + availableWork.getDuration();
                 availableNode.setWorking(true);
                 workManager.startWork(availableWork);
                 System.out.println(messageToSend);
+                availableWork.setWorkerNode(availableNode);
                 availableNode.sendMessageToNode(messageToSend);
+                availableNode.newJob();
                 return availableNode;
             }
         }
         return null;
     }
 
-private Node assignWorkNode(Node inputNode) {
-        return null;
-
-}
-private int findAvailablePort(){
-        try {
-            ServerSocket newSocket = new ServerSocket(0);
-            int freePort = newSocket.getLocalPort();
-            newSocket.close();
-            return freePort;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
     private void workComplete(int workID){
         Work completedWork = workManager.findByID(workID);
         workManager.workComplete(completedWork);
         completedWork.setComplete(true);
+        Node workerNode = completedWork.getWorkerNode();
+        workerNode.jobComplete();
     }
 
     public void runSystem() {
-        Thread a = Thread.currentThread();
         System.out.println("Running System....");
         DatagramSocket socket = null;
             try {
-
                 socket = new DatagramSocket(serverPort);
                 socket.setSoTimeout(0);
                 while (true) {
@@ -104,19 +100,21 @@ private int findAvailablePort(){
                     String command = elements[0].trim();
                     System.out.println(messages);
                     switch(command) {
-                        case "STOP":
+                        case "NEWWORK":
+                            int tempDuration = Integer.parseInt(elements[1]);
+                            createNewWork(tempDuration);
+                            break;
+                        case "SHUTDOWN":
                             shutdown();
                             break;
                         case "NEW":
                             InetAddress tempNodeIP = InetAddress.getByName(elements[1].trim());
                             int tempNodePort = Integer.parseInt(elements[2].trim());
-                            currentNode = createNewNode(tempNodeIP, tempNodePort);
+                            int tempMaxJobs = Integer.parseInt(elements[3].trim());
+                            currentNode = createNewNode(tempNodeIP, tempNodePort, tempMaxJobs);
                             currentNode.sendMessageToNode("ACCEPTED");
                             break;
                         case "READY":
-                            tempNodeIP = InetAddress.getByName(elements[1].trim());
-                            currentNode = nodeManager.findIP(tempNodeIP);
-                            currentNode.setWorking(true);
                             assignWorkCreated();
                             break;
                         case "COMPLETE":
@@ -124,11 +122,43 @@ private int findAvailablePort(){
                             workComplete(completedWorkID);
                             assignWorkCreated();
                             break;
+                        case "FAILEDWORK":
+                            int tempWorkID = Integer.parseInt(elements[1].trim());
+                            Work tempWork = workManager.findByID(tempWorkID);
+                            tempWork.setComplete(false);
+                            workManager.updateWork(tempWork);
+                            System.out.println("Removing bad node from operation");
+                            Node badNode = tempWork.getWorkerNode();
+                            badNode.sendMessageToNode("SHUTDOWN");
+                            nodeManager.delete(badNode);
+                            createNewWork(tempWork.getDuration());
+                            tempWork.setWorkerNode(null);
+                            break;
+                        case "ALIVE":
+                            tempNodeIP = InetAddress.getByName(elements[1].trim());
+                            tempNodePort = Integer.parseInt(elements[2].trim());
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
+                            currentNode.setWorking(false);
+                            currentNode.checkNodeIn();
+                            break;
+                        case "WORKING":
+                            tempNodeIP = InetAddress.getByName(elements[1].trim());
+                            tempNodePort = Integer.parseInt(elements[2].trim());
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
+                            currentNode.setWorking(true);
+                            currentNode.checkNodeIn();
+                            break;
+                        case "DEADNODE":
+                            tempNodeIP = InetAddress.getByName(elements[1].trim());
+                            tempNodePort = Integer.parseInt(elements[2].trim());
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
+                            nodeManager.delete(currentNode);
+                            System.out.println("Node deleted due to unresponsiveness!");
+                            break;
                         default:
                             System.out.println("I don't understand: " + elements[0]);
                     }
                 }
-
             } catch (Exception error) {
                 error.printStackTrace();
             } finally {

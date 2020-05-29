@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LabFileTest.iml" filepath="$PROJECT_DIR$/LabFileTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DNAOSServer.iml" filepath="$PROJECT_DIR$/DNAOSServer.iml" />
     </modules>
   </component>
 </project>
