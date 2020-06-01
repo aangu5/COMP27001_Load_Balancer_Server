@@ -1,11 +1,11 @@
-<mxfile host="app.diagrams.net" modified="2020-06-01T21:11:51.544Z" agent="5.0 (Windows)" etag="bmYcgAzoI7goRQgrmdjW" version="13.1.4" type="github">
+<mxfile host="app.diagrams.net" modified="2020-06-01T21:13:00.106Z" agent="5.0 (Windows)" etag="Z1YBx3jlmA7dfE3WxlB0" version="13.1.4" type="github">
   <diagram id="4WNYwbxlXPTpZDa4QQyr" name="Page-1">
     <mxGraphModel dx="3288" dy="801" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="bzG0KSAQHzLDC1_CFTak-46" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-750" y="550" width="460" height="230" as="geometry" />
+          <mxGeometry x="-750" y="550" width="460" height="150" as="geometry" />
         </mxCell>
         <mxCell id="bzG0KSAQHzLDC1_CFTak-28" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="-750" y="375" width="460" height="165" as="geometry" />
@@ -275,7 +275,7 @@
             <mxPoint x="-440" y="495" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-21" value="&quot;COMPLETE, &amp;lt;65&amp;gt;&quot; " style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bzG0KSAQHzLDC1_CFTak-20">
+        <mxCell id="bzG0KSAQHzLDC1_CFTak-21" value="&quot;COMPLETE, 65&quot; " style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bzG0KSAQHzLDC1_CFTak-20">
           <mxGeometry x="-0.2726" y="-1" relative="1" as="geometry">
             <mxPoint x="43.43" y="-21" as="offset" />
           </mxGeometry>
@@ -305,40 +305,24 @@
         <mxCell id="bzG0KSAQHzLDC1_CFTak-33" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Server_Desktop.svg;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="-360" y="555" width="39.44" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" source="bzG0KSAQHzLDC1_CFTak-36" target="bzG0KSAQHzLDC1_CFTak-37" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="-440" y="660" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-35" value="&quot;ALIVE, &amp;lt;node IP address&amp;gt;, &amp;lt;node port&amp;gt;&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bzG0KSAQHzLDC1_CFTak-34">
-          <mxGeometry x="-0.2726" y="-1" relative="1" as="geometry">
-            <mxPoint x="43.43" y="-21" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-36" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-720" y="640" width="40" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-37" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Server_Desktop.svg;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-360" y="635" width="39.44" height="50" as="geometry" />
-        </mxCell>
         <mxCell id="bzG0KSAQHzLDC1_CFTak-38" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" source="bzG0KSAQHzLDC1_CFTak-40" target="bzG0KSAQHzLDC1_CFTak-41" parent="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="-440" y="740" as="targetPoint" />
+            <mxPoint x="-440" y="655" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bzG0KSAQHzLDC1_CFTak-39" value="&lt;div&gt;&quot;WORKING, &amp;lt;node IP address&amp;gt;, &amp;lt;node port&amp;gt;&quot;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bzG0KSAQHzLDC1_CFTak-38">
+        <mxCell id="bzG0KSAQHzLDC1_CFTak-39" value="&lt;div&gt;&quot;WORKING, localhost, 4999&quot;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bzG0KSAQHzLDC1_CFTak-38">
           <mxGeometry x="-0.2726" y="-1" relative="1" as="geometry">
             <mxPoint x="43.43" y="-21" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="bzG0KSAQHzLDC1_CFTak-40" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-720" y="720" width="40" height="40" as="geometry" />
+          <mxGeometry x="-720" y="635" width="40" height="40" as="geometry" />
         </mxCell>
         <mxCell id="bzG0KSAQHzLDC1_CFTak-41" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Server_Desktop.svg;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-360" y="715" width="39.44" height="50" as="geometry" />
+          <mxGeometry x="-360" y="630" width="39.44" height="50" as="geometry" />
         </mxCell>
         <mxCell id="bzG0KSAQHzLDC1_CFTak-47" value="Node status check" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-870" y="550" width="120" height="230" as="geometry" />
+          <mxGeometry x="-870" y="550" width="120" height="150" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
