@@ -1,15 +1,18 @@
 package com.company;
 
+import java.io.IOException;
 import java.net.*;
 
-public class ServerSystem {
+public class Server {
     private NodeManager nodeManager = new NodeManager();
     private WorkManager workManager = new WorkManager();
     private int serverPort;
     private InetAddress serverIP;
+    boolean systemOnline;
 
-    public ServerSystem(int serverPort) {
+    public Server(int serverPort) {
         this.serverPort = serverPort;
+        systemOnline = true;
         try {
             serverIP = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
@@ -29,7 +32,7 @@ public class ServerSystem {
         if (workManager.isWorkInProgress() || workManager.isWorkAvailable()){
             System.out.println("Unable to shutdown due to work in progress!");
         } else {
-            nodeManager.shutdownHostConnections();
+            nodeManager.shutdownNodeConnections();
             System.out.println("Turning off");
             System.exit(0);
         }
@@ -38,7 +41,7 @@ public class ServerSystem {
     private Node createNewNode(InetAddress nodeIP, int nodePort, int inputMaxJobs) {
         int nodeID = nodeManager.getNextNodeID();
         Node newNode = new Node(this, nodeID, nodeIP, nodePort, inputMaxJobs);
-        nodeManager.addNewMachine(newNode);
+        nodeManager.addNewNode(newNode);
         return newNode;
     }
 
@@ -64,7 +67,7 @@ public class ServerSystem {
                 Node availableNode = nodeManager.getMostFreeNode();
                 Work availableWork = workManager.getAvailableWork();
                 messageToSend = "WORK," + availableWork.getWorkID() + "," + availableWork.getDuration();
-                availableNode.setWorking(true);
+                availableNode.setNodeWorkingState(true);
                 workManager.startWork(availableWork);
                 System.out.println(messageToSend);
                 availableWork.setWorkerNode(availableNode);
@@ -87,42 +90,59 @@ public class ServerSystem {
     public void runSystem() {
         System.out.println("Running System....");
         DatagramSocket socket = null;
-            try {
-                socket = new DatagramSocket(serverPort);
-                socket.setSoTimeout(0);
-                while (true) {
-                    Node currentNode;
-                    byte[] buffer = new byte[1024];
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                    socket.receive(packet);
-                    String messages = new String(buffer);
-                    String[] elements = messages.trim().split(",");
-                    String command = elements[0].trim();
-                    System.out.println(messages);
-                    switch(command) {
-                        case "NEWWORK":
+        InetAddress tempNodeIP = null;
+        int tempNodePort = 0;
+        int tempMaxJobs = 0;
+        try {
+            socket = new DatagramSocket(serverPort);
+            socket.setSoTimeout(0);
+
+            while (systemOnline) {
+                Node currentNode;
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                String messages = new String(buffer);
+                String[] elements = messages.trim().split(",");
+                String command = elements[0].trim();
+                System.out.println(messages);
+                switch (command) {
+                    case "NEWWORK":
+                        try {
                             int tempDuration = Integer.parseInt(elements[1]);
                             createNewWork(tempDuration);
-                            break;
-                        case "SHUTDOWN":
-                            shutdown();
-                            break;
-                        case "NEW":
-                            InetAddress tempNodeIP = InetAddress.getByName(elements[1].trim());
-                            int tempNodePort = Integer.parseInt(elements[2].trim());
-                            int tempMaxJobs = Integer.parseInt(elements[3].trim());
+                        } catch (NumberFormatException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    case "SHUTDOWN":
+                        shutdown();
+                        break;
+                    case "NEW":
+                        try {
+                            tempNodeIP = InetAddress.getByName(elements[1].trim());
+                            tempNodePort = Integer.parseInt(elements[2].trim());
+                            tempMaxJobs = Integer.parseInt(elements[3].trim());
                             currentNode = createNewNode(tempNodeIP, tempNodePort, tempMaxJobs);
                             currentNode.sendMessageToNode("ACCEPTED");
-                            break;
-                        case "READY":
-                            assignWorkCreated();
-                            break;
-                        case "COMPLETE":
+                        } catch (UnknownHostException | NumberFormatException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    case "READY":
+                        assignWorkCreated();
+                        break;
+                    case "COMPLETE":
+                        try {
                             int completedWorkID = Integer.parseInt(elements[1].trim());
                             workComplete(completedWorkID);
-                            assignWorkCreated();
-                            break;
-                        case "FAILEDWORK":
+                        } catch (NumberFormatException exception) {
+                            exception.printStackTrace();
+                        }
+                        assignWorkCreated();
+                        break;
+                    case "FAILEDWORK":
+                        try {
                             int tempWorkID = Integer.parseInt(elements[1].trim());
                             Work tempWork = workManager.findByID(tempWorkID);
                             tempWork.setComplete(false);
@@ -133,40 +153,51 @@ public class ServerSystem {
                             nodeManager.delete(badNode);
                             createNewWork(tempWork.getDuration());
                             tempWork.setWorkerNode(null);
-                            break;
-                        case "ALIVE":
+                        } catch (NumberFormatException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    case "ALIVE":
+                        try {
                             tempNodeIP = InetAddress.getByName(elements[1].trim());
                             tempNodePort = Integer.parseInt(elements[2].trim());
-                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
-                            currentNode.setWorking(false);
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP, tempNodePort);
+                            currentNode.setNodeWorkingState(false);
                             currentNode.checkNodeIn();
-                            break;
-                        case "WORKING":
+                        } catch (NumberFormatException | UnknownHostException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    case "WORKING":
+                        try {
                             tempNodeIP = InetAddress.getByName(elements[1].trim());
                             tempNodePort = Integer.parseInt(elements[2].trim());
-                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
-                            currentNode.setWorking(true);
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP, tempNodePort);
+                            currentNode.setNodeWorkingState(true);
                             currentNode.checkNodeIn();
-                            break;
-                        case "DEADNODE":
+                        } catch (NumberFormatException | UnknownHostException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    case "DEADNODE":
+                        try {
                             tempNodeIP = InetAddress.getByName(elements[1].trim());
                             tempNodePort = Integer.parseInt(elements[2].trim());
-                            currentNode = nodeManager.findByIPAndPort(tempNodeIP,tempNodePort);
+                            currentNode = nodeManager.findByIPAndPort(tempNodeIP, tempNodePort);
                             nodeManager.delete(currentNode);
                             System.out.println("Node deleted due to unresponsiveness!");
-                            break;
-                        default:
-                            System.out.println("I don't understand: " + elements[0]);
-                    }
+                        } catch (NumberFormatException | UnknownHostException exception) {
+                            exception.printStackTrace();
+                        }
+                        break;
+                    default:
+                        System.out.println("I don't understand: " + elements[0]);
                 }
-            } catch (Exception error) {
-                error.printStackTrace();
-            } finally {
-                try {
-                    socket.close();
-                } catch (Exception error) {
-                    error.printStackTrace();
-                }
+            }
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        } finally {
+            socket.close();
         }
     }
 }

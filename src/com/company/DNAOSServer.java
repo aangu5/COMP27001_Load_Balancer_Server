@@ -6,8 +6,8 @@ public class DNAOSServer {
         if (args.length != 1) {
             System.out.println("Usage: Example3 <server port>");
         } else {
-            ServerSystem serverSystem = new ServerSystem(Integer.parseInt(args[0]));
-            serverSystem.runSystem();
+            Server server = new Server(Integer.parseInt(args[0]));
+            server.runSystem();
         }
     }
 }

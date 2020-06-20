@@ -1,12 +1,15 @@
 package com.company;
 
-import java.rmi.activation.ActivationGroup_Stub;
 import java.util.LinkedList;
 
 public class WorkManager {
     private LinkedList allWork = new LinkedList();
     private LinkedList pendingWork = new LinkedList();
     private LinkedList currentWork = new LinkedList();
+
+    public WorkManager() {
+
+    }
 
     public boolean addWork(Work newWork){
         boolean status = false;

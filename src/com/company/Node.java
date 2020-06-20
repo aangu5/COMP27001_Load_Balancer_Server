@@ -16,10 +16,10 @@ public class Node extends Thread {
     private int currentJobs;
     private long lastCheckIn;
     private boolean nodeOnline;
-    private ServerSystem server;
-    private final int timeout = 10;
+    private Server server;
+    private final int timeout = 60;
 
-    public Node(ServerSystem inputServerSystem, int nodeID, InetAddress nodeIPAddress, int nodePort, int maxJobs) {
+    public Node(Server inputServer, int nodeID, InetAddress nodeIPAddress, int nodePort, int maxJobs) {
         this.nodeIPAddress = nodeIPAddress;
         this.nodeID = nodeID;
         this.nodePort = nodePort;
@@ -27,7 +27,7 @@ public class Node extends Thread {
         working = false;
         lastCheckIn = Instant.now().getEpochSecond();
         nodeOnline = true;
-        server = inputServerSystem;
+        server = inputServer;
         System.out.println("New machine - ID: " + nodeID + " IP: " + getNodeIPAddress().getHostAddress() + " PORT: " + getNodePort() + " job limit: " + getMaxJobs() );
         start();
     }
@@ -39,7 +39,7 @@ public class Node extends Thread {
         double utilisationPercent =  ((double)currentJobs /(double) maxJobs) * 100;
         return utilisationPercent;
     }
-    public void setWorking(boolean working) { this.working = working; }
+    public void setNodeWorkingState(boolean working) { this.working = working; }
     public void newJob() { currentJobs += 1;}
     public void jobComplete() { currentJobs -= 1; }
     public void checkNodeIn() { lastCheckIn = Instant.now().getEpochSecond(); }

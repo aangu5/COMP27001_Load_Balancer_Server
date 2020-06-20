@@ -9,8 +9,12 @@ public class NodeManager {
     private LinkedList nodesByUtilisation = new LinkedList();
     private LinkedList allNodes = new LinkedList();
 
-    public boolean addNewMachine(Node newMachine) {
-        return connectedNodes.add(newMachine) && nodesByUtilisation.add(newMachine) && allNodes.add(newMachine);
+    public NodeManager() {
+
+    }
+
+    public boolean addNewNode(Node newNode) {
+        return connectedNodes.add(newNode) && nodesByUtilisation.add(newNode) && allNodes.add(newNode);
     }
 
     public Node findByIPAndPort(InetAddress ipToFind, int portToFind){
@@ -25,7 +29,6 @@ public class NodeManager {
         return null;
     }
 
-
     public void sortNodesByUtilisation() {
         nodesByUtilisation.sort(Comparator.comparingDouble(Node::getCurrentUtilisation).reversed());
     }
@@ -35,7 +38,14 @@ public class NodeManager {
         if (nodesByUtilisation.isEmpty()) {
             return null;
         } else {
-            return (Node) nodesByUtilisation.getLast();
+            Node tempNode = (Node) nodesByUtilisation.getLast();
+            if (tempNode.getCurrentUtilisation()  >= 100) {
+                System.out.println("Unable to assign work - all nodes are full!");
+                return null;
+            } else {
+                return tempNode;
+            }
+
         }
     }
 
@@ -52,7 +62,7 @@ public class NodeManager {
         return allNodes.size() + 1;
     }
 
-    public void shutdownHostConnections() {
+    public void shutdownNodeConnections() {
         for (int i = 0; i < connectedNodes.size(); i++) {
             Node listNode = (Node) connectedNodes.get(i);
             listNode.sendMessageToNode("SHUTDOWN");

@@ -13,7 +13,7 @@ public class Work extends Thread {
     private Node workerNode;
     private double timeoutDouble;
     private int timeoutInt;
-    private ServerSystem server;
+    private Server server;
 
     public int getWorkID() { return workID; }
     public int getDuration() { return duration; }
@@ -22,7 +22,7 @@ public class Work extends Thread {
     public void setComplete(boolean inputComplete) { complete = inputComplete; }
     public void setWorkerNode(Node inputWorkerNode) { workerNode = inputWorkerNode; }
 
-    public Work(ServerSystem server, int workID, int duration) {
+    public Work(Server server, int workID, int duration) {
         try {
             this.server = server;
             this.workID = workID;
