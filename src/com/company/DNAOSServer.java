@@ -1,13 +1,22 @@
 package com.company;
 
 public class DNAOSServer {
+    /**
+     * takes the parameters provided and either runs the system or prints a message to console
+     * Expected input is an integer to be used as the server port for incoming messages
+     * @param args
+     */
 
     public static void main(String[] args) {
         if (args.length != 1) {
             System.out.println("Usage: Example3 <server port>");
         } else {
-            Server server = new Server(Integer.parseInt(args[0]));
-            server.runSystem();
+            int portNumber = Integer.parseInt(args[0]);
+            if (portNumber > 65535) {
+                System.out.println("This is too large! Please enter an available port number 1 - 65535");
+            } else {
+                Server server = new Server(Integer.parseInt(args[0]));
+            }
         }
     }
 }

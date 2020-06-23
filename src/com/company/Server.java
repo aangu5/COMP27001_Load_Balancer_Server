@@ -4,12 +4,22 @@ import java.io.IOException;
 import java.net.*;
 
 public class Server {
+    /**
+     * NodeManager and WorkManager objects to manage the Work and Node objects
+     * serverPort is the port that the server receives messages on
+     * serverIP is the IP of the server, found using Inetaddress.getLocalHost() in the constructor
+     * systemOnline is the status of the system
+     */
     private NodeManager nodeManager = new NodeManager();
     private WorkManager workManager = new WorkManager();
     private int serverPort;
     private InetAddress serverIP;
     boolean systemOnline;
 
+    /**
+     * Server constructor sets the port, IP and system online and then runs the system with the runSystem() method
+     * @param serverPort - integer for the port that the server receives messages on
+     */
     public Server(int serverPort) {
         this.serverPort = serverPort;
         systemOnline = true;
@@ -18,15 +28,26 @@ public class Server {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+        runSystem();
     }
 
+    /**
+     * @return ip address of server
+     */
     public InetAddress getServerIP() {
         return serverIP;
     }
+
+    /**
+     * @return port of server
+     */
     public int getServerPort() {
         return serverPort;
     }
 
+    /**
+     * initiates a shutdown for the nodes and server if there is no work in progress or backlog
+     */
     public void shutdown() {
         System.out.println("There is work in progress: " + workManager.isWorkInProgress());
         if (workManager.isWorkInProgress() || workManager.isWorkAvailable()){
@@ -38,6 +59,13 @@ public class Server {
         }
     }
 
+    /**
+     * local method to create a new node, calls the Node constructor and adds the new node into the node manager
+     * @param nodeIP - IP address of new node
+     * @param nodePort - port of new node
+     * @param inputMaxJobs - number of max jobs the node can carry out at any one time
+     * @return - Node object that is created
+     */
     private Node createNewNode(InetAddress nodeIP, int nodePort, int inputMaxJobs) {
         int nodeID = nodeManager.getNextNodeID();
         Node newNode = new Node(this, nodeID, nodeIP, nodePort, inputMaxJobs);
@@ -45,6 +73,11 @@ public class Server {
         return newNode;
     }
 
+    /**
+     * local method to create a new Work object, calls the work constructor and adds the new work into the work manager
+     * Then tries to assign the work to a node if there is one available, else the work goes into the backlog
+     * @param duration - length of time in seconds that the job will take
+     */
     public void createNewWork(int duration) {
         int workID = workManager.getNextWorkID();
         Work newWork = new Work(this, workID, duration);
@@ -58,6 +91,11 @@ public class Server {
         }
     }
 
+    /**
+     * assigns Work to a Node based on whether work is available and which node is the most free node
+     * Then sets the Node to working and sends it a message to start working
+     * @return - the Node that the work was assigned to
+     */
     private Node assignWorkCreated() {
         String messageToSend;
         if (workManager.isWorkAvailable()) {
@@ -79,6 +117,10 @@ public class Server {
         return null;
     }
 
+    /**
+     * sets a Work object as complete, calls the setComplete method and removes the task from the node
+     * @param workID - the work ID of the Work that was completed
+     */
     private void workComplete(int workID){
         Work completedWork = workManager.findByID(workID);
         workManager.workComplete(completedWork);
@@ -87,6 +129,20 @@ public class Server {
         workerNode.jobComplete();
     }
 
+    /**
+     * Most critical method in this piece of work. Runs the system, opens the serverPort to receive messages and operates a switch case statement based on the message received.
+     * Possible messages include:
+     * - NEWWORK - used to create new Work objects
+     * - SHUTDOWN - used to shutdown the system
+     * - NEW - used to create new Node objects when a Node comes online
+     * - READY - used to indicated that a Node is ready for work
+     * - COMPLETE - used to indicate that work has been completed
+     * - FAILEDWORK - used to indicate that work has failed
+     * - ALIVE - used to indicate that a Node is alive after the server sends a STATUSCHECK message
+     * - WORKING - used to indicate that a Node is working after the server sends a STATUSCHECK message
+     * - DEADNODE - used to indicate that the server has detected a deadnode
+     * Any other message will be printed to the console with a "I don't understand:" statement and the message
+     */
     public void runSystem() {
         System.out.println("Running System....");
         DatagramSocket socket = null;
