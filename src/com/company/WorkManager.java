@@ -3,27 +3,21 @@ package com.company;
 import java.util.LinkedList;
 
 public class WorkManager {
-    /**
-     * Three linked lists to represent all the work, the pending work and the work taking place currently
-     */
-    private LinkedList<Work> allWork = new LinkedList<>();
-    private LinkedList<Work> pendingWork = new LinkedList<>();
-    private LinkedList<Work> currentWork = new LinkedList<>();
+    private LinkedList<Work> allWork = new LinkedList<>();          //linked list of all Work
+    private LinkedList<Work> pendingWork = new LinkedList<>();      //linked list of all pending Work
+    private LinkedList<Work> currentWork = new LinkedList<>();      //linked list of all work in progress
 
     /**
      * Adds Work object to pending work and all work lists and writes the backlog length to the console
      * @param newWork - Work object to be added
-     * @return - true or false based on whether adding the work to the lists was successful
      */
-    public boolean addWork(Work newWork){
-        boolean status = false;
+    public void addWork(Work newWork){
         if (!pendingWork.contains(newWork) && !allWork.contains(newWork)) {
-            status = pendingWork.add(newWork) && allWork.add(newWork);
+            pendingWork.add(newWork);
+            allWork.add(newWork);
             System.out.println("There is now " + getPendingWorkLength() + " seconds of work currently in the backlog.");
         }
-        return status;
     }
-
 
     /**
      * @return - true or false based on whether work is available
@@ -46,7 +40,7 @@ public class WorkManager {
      */
     public Work getAvailableWork() {
         try {
-            return (Work) pendingWork.getFirst();
+            return pendingWork.getFirst();
         } catch (Exception e) {
             System.out.println("No work available!");
             return null;
@@ -58,12 +52,10 @@ public class WorkManager {
      * @param startedWork - the Work object that has been started
      */
     public void startWork(Work startedWork) {
-        if(!currentWork.contains(currentWork)) {
+        if(!currentWork.contains(startedWork)) {
             currentWork.add(startedWork);
         }
-        if (pendingWork.contains(startedWork)) {
-            pendingWork.remove(startedWork);
-        }
+        pendingWork.remove(startedWork);
         if(!startedWork.isAlive()) {
             startedWork.start();
         }
@@ -75,7 +67,7 @@ public class WorkManager {
      */
     public int getPendingWorkLength() {
         int pendingWorkLength = 0;
-        Work currentWork = null;
+        Work currentWork;
         for (Object o : pendingWork) {
             currentWork = (Work) o;
             pendingWorkLength += currentWork.getDuration();
@@ -86,31 +78,29 @@ public class WorkManager {
     /**
      * updates the Work objects stored in the lists with an updated version of itself
      * @param updatedWork - the updated Work object
-     * @return - true or false whether the object was updated
      */
-    public boolean updateWork(Work updatedWork) {
+    public void updateWork(Work updatedWork) {
         for (int i = 0; i < allWork.size(); i++) {
-            Work listWork = (Work) allWork.get(i);
+            Work listWork = allWork.get(i);
             if (listWork.getWorkID() == updatedWork.getWorkID()) {
                 allWork.set(i, updatedWork);
-                return true;
+                return;
             }
         }
         for (int i = 0; i < pendingWork.size(); i++) {
-            Work listWork = (Work) allWork.get(i);
+            Work listWork = allWork.get(i);
             if (listWork.getWorkID() == updatedWork.getWorkID()) {
                 allWork.set(i, updatedWork);
-                return true;
+                return;
             }
         }
         for (int i = 0; i < currentWork.size(); i++) {
-            Work listWork = (Work) allWork.get(i);
+            Work listWork = allWork.get(i);
             if (listWork.getWorkID() == updatedWork.getWorkID()) {
                 allWork.set(i, updatedWork);
-                return true;
+                return;
             }
         }
-        return false;
     }
 
     /**
@@ -125,11 +115,9 @@ public class WorkManager {
      * @return - the Work object or null if not available
      */
     public Work findByID(int inputID) {
-        Work tempWork;
-        for (int i = 0; i < allWork.size(); i++) {
-            tempWork = (Work) allWork.get(i);
-            if (tempWork.getWorkID() == inputID) {
-                return tempWork;
+        for (Work work : allWork) {
+            if (work.getWorkID() == inputID) {
+                return work;
             }
         }
         return null;

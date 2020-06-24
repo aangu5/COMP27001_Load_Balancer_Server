@@ -5,21 +5,18 @@ import java.util.Comparator;
 import java.util.LinkedList;
 
 public class NodeManager {
-
-    /**
-     * Three linked lists to represent the connected nodes, the nodes sorted by utilisation and all the nodes that have ever been connected
-     */
-    private LinkedList connectedNodes = new LinkedList();
-    private LinkedList nodesByUtilisation = new LinkedList();
-    private LinkedList allNodes = new LinkedList();
+    private LinkedList<Node> connectedNodes = new LinkedList<>();           //linked list of all connected Nodes
+    private LinkedList<Node> nodesByUtilisation = new LinkedList<>();       //linked list of connected Nodes sorted by utilisation
+    private LinkedList<Node> allNodes = new LinkedList<>();                 //linked list of all Nodes
 
     /**
      * Adds a new node to the linked lists
      * @param newNode - node object representing the new node
-     * @return - true or false based on the success of the nodes being added to the lists
      */
-    public boolean addNewNode(Node newNode) {
-        return connectedNodes.add(newNode) && nodesByUtilisation.add(newNode) && allNodes.add(newNode);
+    public void addNewNode(Node newNode) {
+        if (connectedNodes.add(newNode) && nodesByUtilisation.add(newNode)) {
+            allNodes.add(newNode);
+        }
     }
 
     /**
@@ -29,11 +26,10 @@ public class NodeManager {
      * @return - returns the node object or null if not found
      */
     public Node findByIPAndPort(InetAddress ipToFind, int portToFind){
-        for (int i = 0; i < connectedNodes.size(); i++) {
-            Node listNode = (Node) connectedNodes.get(i);
-            if (listNode.getNodeIPAddress().getHostAddress().equals(ipToFind.getHostAddress())) {
-                if (listNode.getNodePort() == portToFind){
-                    return listNode;
+        for (Node connectedNode : connectedNodes) {
+            if (connectedNode.getNodeIPAddress().getHostAddress().equals(ipToFind.getHostAddress())) {
+                if (connectedNode.getNodePort() == portToFind) {
+                    return connectedNode;
                 }
             }
         }
@@ -57,7 +53,7 @@ public class NodeManager {
         if (nodesByUtilisation.isEmpty()) {
             return null;
         } else {
-            Node tempNode = (Node) nodesByUtilisation.getLast();
+            Node tempNode = nodesByUtilisation.getLast();
             if (tempNode.getCurrentUtilisation()  >= 100) {
                 System.out.println("Unable to assign work - all nodes are full!");
                 return null;
@@ -94,7 +90,7 @@ public class NodeManager {
      */
     public void shutdownNodeConnections() {
         for (int i = 0; i < connectedNodes.size(); i++) {
-            Node listNode = (Node) connectedNodes.get(i);
+            Node listNode = connectedNodes.get(i);
             listNode.sendMessageToNode("SHUTDOWN");
             connectedNodes.remove(listNode);
             System.out.println("Node " + listNode.getNodeID() + " disconnected.");

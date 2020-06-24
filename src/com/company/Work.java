@@ -10,8 +10,7 @@ public class Work extends Thread {
     private int duration;                   //duration of the Work object in seconds
     private boolean complete;               //indicator of whether the task is complete
     private Node workerNode;                //Node object that is carrying out the Work
-    private double timeoutDouble;           //the timeout of the Work object as a double, this is set to time and a half in the constructor
-    private int timeoutInt;                 //the timeout of the Work object as an int, this is converted when the work is started
+    private double timeoutDouble;           //the timeout of the Work object, this is set to time and a half in the constructor
     private Server server;                  //the Server object that is running this program
 
     public int getWorkID() { return workID; }           //getter for the WorkID
@@ -40,14 +39,14 @@ public class Work extends Thread {
     }
 
     /**
-     * this overrides the default run() method in the Thread class to enable this to occur concurrantly to the main program.
+     * this overrides the default run() method in the Thread class to enable this to occur concurrently to the main program.
      * This waits for the job length plus half and if the job is not completed in this time, it will send a message to the main program that the task has failed.
      * Once the server receives it, another task will be created and resubmitted
      */
     @Override
     public void run() {
         try {
-            timeoutInt = (int)timeoutDouble;
+            int timeoutInt = (int) timeoutDouble;
             TimeUnit.SECONDS.sleep(timeoutInt);
             if (!complete) {
                 System.out.println("Work not completed - potential error!");
@@ -56,6 +55,7 @@ public class Work extends Thread {
                 DatagramSocket socket = new DatagramSocket();
                 socket.send(packet);
                 socket.close();
+                complete = true;
             }
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();

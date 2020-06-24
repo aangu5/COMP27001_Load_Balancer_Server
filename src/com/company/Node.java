@@ -11,13 +11,11 @@ public class Node extends Thread {
     private InetAddress nodeIPAddress;          //IP address of the Node
     private int nodeID;                         //unique identifier of the Node
     private int nodePort;                       //Port that the Node uses to receive messages on
-    private boolean working;                    //boolean field showing whether the Node is working or not
     private int maxJobs;                        //integer representing the max number of jobs the Node can carry out at once
     private int currentJobs;                    //integer representing the current number of jobs the Node is working on currently
     private long lastCheckIn;                   //long representing the most recent Node check in using Unix time
     private boolean nodeOnline;                 //boolean representing whether the Node is online or not
     private Server server;                      //Server object that this program is running on
-    private final int timeout = 60;             //time delay between Node status checks
 
     /**
      * Node constructor that sets local variables and outputs to the console that there is a new node added.
@@ -33,7 +31,6 @@ public class Node extends Thread {
         this.nodeID = nodeID;
         this.nodePort = nodePort;
         this.maxJobs = maxJobs;
-        working = false;
         lastCheckIn = Instant.now().getEpochSecond();
         nodeOnline = true;
         server = inputServer;
@@ -45,10 +42,9 @@ public class Node extends Thread {
     public int getNodePort(){ return nodePort; }                                            //getter for Node Port
     public int getMaxJobs() { return maxJobs; }                                             //getter for Node max jobs
     public double getCurrentUtilisation() {                                                 //getter for current utilisation, calculated by dividing the current jobs by the max jobs
-        double utilisationPercent =  ((double)currentJobs /(double) maxJobs) * 100;
-        return utilisationPercent;
+        return ((double)currentJobs /(double) maxJobs) * 100;
     }
-    public void setNodeWorkingState(boolean working) { this.working = working; }            //setter for the working state
+
     public void newJob() { currentJobs += 1;}                                               //adds one to the current jobs counter
     public void jobComplete() { currentJobs -= 1; }                                         //takes one away from the current jobs counter
     public void checkNodeIn() { lastCheckIn = Instant.now().getEpochSecond(); }             //updates the lastCheckIn to the current second as part of the Node check in process
@@ -78,14 +74,16 @@ public class Node extends Thread {
     public void run() {
         while (nodeOnline) {
             System.out.println("Node check in status is: " + lastCheckIn);
-                if (lastCheckIn < (Instant.now().getEpochSecond() - (timeout + timeout / 2))) {
+            //time delay between Node status checks
+            int timeout = 60;
+            if (lastCheckIn < (Instant.now().getEpochSecond() - (timeout + timeout / 2))) {
                     System.out.println("Looks like we have a node that isn't responding! Attempting to shutdown the node....");
                     sendMessageToNode("SHUTDOWN");
                     nodeOnline = false;
                     System.out.println("Node not responding - potential error!");
                     String message = "DEADNODE," + nodeIPAddress.getHostAddress() + "," + nodePort;
                     DatagramPacket packet = new DatagramPacket(message.getBytes(),message.getBytes().length, server.getServerIP(),server.getServerPort());
-                    DatagramSocket socket = null;
+                    DatagramSocket socket;
                     try {
                         socket = new DatagramSocket();
                         socket.send(packet);

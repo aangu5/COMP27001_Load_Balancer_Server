@@ -4,7 +4,7 @@ public class DNAOSServer {
     /**
      * takes the parameters provided and either runs the system or prints a message to console
      * Expected input is an integer to be used as the server port for incoming messages
-     * @param args
+     * @param args - should contain a single integer to act as the port for the server to receive messages on
      */
 
     public static void main(String[] args) {

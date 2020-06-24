@@ -4,17 +4,11 @@ import java.io.IOException;
 import java.net.*;
 
 public class Server {
-    /**
-     * NodeManager and WorkManager objects to manage the Work and Node objects
-     * serverPort is the port that the server receives messages on
-     * serverIP is the IP of the server, found using Inetaddress.getLocalHost() in the constructor
-     * systemOnline is the status of the system
-     */
-    private NodeManager nodeManager = new NodeManager();
-    private WorkManager workManager = new WorkManager();
-    private int serverPort;
-    private InetAddress serverIP;
-    boolean systemOnline;
+    private NodeManager nodeManager = new NodeManager();            //instantiates a NodeManager object to store all the Nodes
+    private WorkManager workManager = new WorkManager();            //instantiates a WorkManager object to store all the Work
+    private int serverPort;                                         //port that the server receives messages on
+    private InetAddress serverIP;                                   //IP address of the server, set in the constructor using .getLocalHost()
+    boolean systemOnline;                                           //boolean flag that represents whether the system is online or not
 
     /**
      * Server constructor sets the port, IP and system online and then runs the system with the runSystem() method
@@ -105,7 +99,6 @@ public class Server {
                 Node availableNode = nodeManager.getMostFreeNode();
                 Work availableWork = workManager.getAvailableWork();
                 messageToSend = "WORK," + availableWork.getWorkID() + "," + availableWork.getDuration();
-                availableNode.setNodeWorkingState(true);
                 workManager.startWork(availableWork);
                 System.out.println(messageToSend);
                 availableWork.setWorkerNode(availableNode);
@@ -145,12 +138,10 @@ public class Server {
      */
     public void runSystem() {
         System.out.println("Running System....");
-        DatagramSocket socket = null;
-        InetAddress tempNodeIP = null;
-        int tempNodePort = 0;
-        int tempMaxJobs = 0;
-        try {
-            socket = new DatagramSocket(serverPort);
+        InetAddress tempNodeIP;
+        int tempNodePort;
+        int tempMaxJobs;
+        try (DatagramSocket socket = new DatagramSocket(serverPort)) {
             socket.setSoTimeout(0);
 
             while (systemOnline) {
@@ -201,35 +192,25 @@ public class Server {
                         try {
                             int tempWorkID = Integer.parseInt(elements[1].trim());
                             Work tempWork = workManager.findByID(tempWorkID);
-                            tempWork.setComplete(false);
+                            Node badNode = tempWork.getWorkerNode();
+                            tempWork.setComplete(true);
                             workManager.updateWork(tempWork);
                             System.out.println("Removing bad node from operation");
-                            Node badNode = tempWork.getWorkerNode();
                             badNode.sendMessageToNode("SHUTDOWN");
                             nodeManager.delete(badNode);
                             createNewWork(tempWork.getDuration());
                             tempWork.setWorkerNode(null);
+                            workManager.workComplete(tempWork);
                         } catch (NumberFormatException exception) {
                             exception.printStackTrace();
                         }
                         break;
                     case "ALIVE":
-                        try {
-                            tempNodeIP = InetAddress.getByName(elements[1].trim());
-                            tempNodePort = Integer.parseInt(elements[2].trim());
-                            currentNode = nodeManager.findByIPAndPort(tempNodeIP, tempNodePort);
-                            currentNode.setNodeWorkingState(false);
-                            currentNode.checkNodeIn();
-                        } catch (NumberFormatException | UnknownHostException exception) {
-                            exception.printStackTrace();
-                        }
-                        break;
                     case "WORKING":
                         try {
                             tempNodeIP = InetAddress.getByName(elements[1].trim());
                             tempNodePort = Integer.parseInt(elements[2].trim());
                             currentNode = nodeManager.findByIPAndPort(tempNodeIP, tempNodePort);
-                            currentNode.setNodeWorkingState(true);
                             currentNode.checkNodeIn();
                         } catch (NumberFormatException | UnknownHostException exception) {
                             exception.printStackTrace();
@@ -252,8 +233,6 @@ public class Server {
             }
         } catch (IOException exception) {
             exception.printStackTrace();
-        } finally {
-            socket.close();
         }
     }
 }
