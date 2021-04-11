@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Work extends Thread {
+
+    private static final Logger logger = Logger.getLogger(Work.class.getName());
+
     private int workID;                     //unique identifier of the Work object
     private int duration;                   //duration of the Work object in seconds
     private boolean complete;               //indicator of whether the task is complete
@@ -32,9 +37,9 @@ public class Work extends Thread {
             this.workID = workID;
             this.duration = duration;
             timeoutDouble = duration + ((double) duration / 2);
-            System.out.println("Work created! ID: " + workID + ", duration: " + duration + ".");
+            logger.log(Level.INFO, "Work created! ID: {} Duration: {}", new Object[]{ workID, duration });
         } catch (Exception e) {
-            System.out.println("Input not recognised: " + e.getMessage());
+            logger.log(Level.WARNING, "Input not recognised: {}", e.getMessage());
         }
     }
 
@@ -45,16 +50,14 @@ public class Work extends Thread {
      */
     @Override
     public void run() {
-        try {
+        try (DatagramSocket socket = new DatagramSocket()) {
             int timeoutInt = (int) timeoutDouble;
             TimeUnit.SECONDS.sleep(timeoutInt);
             if (!complete) {
-                System.out.println("Work not completed - potential error!");
+                logger.log(Level.WARNING, "Work not completed - potential error!");
                 String message = "FAILEDWORK," + workID + "," + duration;
                 DatagramPacket packet = new DatagramPacket(message.getBytes(),message.getBytes().length, server.getServerIP(),server.getServerPort());
-                DatagramSocket socket = new DatagramSocket();
                 socket.send(packet);
-                socket.close();
                 complete = true;
             }
         } catch (InterruptedException | IOException e) {

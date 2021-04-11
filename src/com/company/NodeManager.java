@@ -3,11 +3,15 @@ package com.company;
 import java.net.InetAddress;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class NodeManager {
-    private LinkedList<Node> connectedNodes = new LinkedList<>();           //linked list of all connected Nodes
-    private LinkedList<Node> nodesByUtilisation = new LinkedList<>();       //linked list of connected Nodes sorted by utilisation
-    private LinkedList<Node> allNodes = new LinkedList<>();                 //linked list of all Nodes
+    private static final Logger logger = Logger.getLogger(NodeManager.class.getName());
+
+    private final LinkedList<Node> connectedNodes = new LinkedList<>();           //linked list of all connected Nodes
+    private final LinkedList<Node> nodesByUtilisation = new LinkedList<>();       //linked list of connected Nodes sorted by utilisation
+    private final LinkedList<Node> allNodes = new LinkedList<>();                 //linked list of all Nodes
 
     /**
      * Adds a new node to the linked lists
@@ -27,10 +31,8 @@ public class NodeManager {
      */
     public Node findByIPAndPort(InetAddress ipToFind, int portToFind){
         for (Node connectedNode : connectedNodes) {
-            if (connectedNode.getNodeIPAddress().getHostAddress().equals(ipToFind.getHostAddress())) {
-                if (connectedNode.getNodePort() == portToFind) {
-                    return connectedNode;
-                }
+            if (connectedNode.getNodeIPAddress().getHostAddress().equals(ipToFind.getHostAddress()) && connectedNode.getNodePort() == portToFind) {
+                return connectedNode;
             }
         }
         return null;
@@ -55,7 +57,7 @@ public class NodeManager {
         } else {
             Node tempNode = nodesByUtilisation.getLast();
             if (tempNode.getCurrentUtilisation()  >= 100) {
-                System.out.println("Unable to assign work - all nodes are full!");
+                logger.log(Level.WARNING, "Unable to assign work - all nodes are full!");
                 return null;
             } else {
                 return tempNode;
@@ -73,7 +75,7 @@ public class NodeManager {
             connectedNodes.remove(machine);
             nodesByUtilisation.remove(machine);
         } catch (Exception e){
-            System.out.println("Machine not found " + e);
+            logger.log(Level.WARNING, "Machine not found: {}", e.getMessage());
         }
     }
 
@@ -93,7 +95,7 @@ public class NodeManager {
             Node listNode = connectedNodes.get(i);
             listNode.sendMessageToNode("SHUTDOWN");
             connectedNodes.remove(listNode);
-            System.out.println("Node " + listNode.getNodeID() + " disconnected.");
+            logger.log(Level.INFO, "Node: {} disconnected.", listNode);
         }
     }
 }

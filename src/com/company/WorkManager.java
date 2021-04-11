@@ -1,11 +1,16 @@
 package com.company;
 
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WorkManager {
-    private LinkedList<Work> allWork = new LinkedList<>();          //linked list of all Work
-    private LinkedList<Work> pendingWork = new LinkedList<>();      //linked list of all pending Work
-    private LinkedList<Work> currentWork = new LinkedList<>();      //linked list of all work in progress
+
+    private static final Logger logger = Logger.getLogger(WorkManager.class.getName());
+
+    private final LinkedList<Work> allWork = new LinkedList<>();          //linked list of all Work
+    private final LinkedList<Work> pendingWork = new LinkedList<>();      //linked list of all pending Work
+    private final LinkedList<Work> currentWork = new LinkedList<>();      //linked list of all work in progress
 
     /**
      * Adds Work object to pending work and all work lists and writes the backlog length to the console
@@ -15,7 +20,7 @@ public class WorkManager {
         if (!pendingWork.contains(newWork) && !allWork.contains(newWork)) {
             pendingWork.add(newWork);
             allWork.add(newWork);
-            System.out.println("There is now " + getPendingWorkLength() + " seconds of work currently in the backlog.");
+            logger.log(Level.INFO, "There are now {} seconds of work currently in the backlog.", getPendingWorkLength());
         }
     }
 
@@ -30,7 +35,7 @@ public class WorkManager {
      * @return - boolean value based on whether work is in progress
      */
     public boolean isWorkInProgress() {
-        System.out.println("Number of jobs in progress: " + currentWork.size());
+        logger.log(Level.INFO, "Number of jobs in progress: {}", currentWork.size());
         return (!currentWork.isEmpty());
     }
 
@@ -42,7 +47,7 @@ public class WorkManager {
         try {
             return pendingWork.getFirst();
         } catch (Exception e) {
-            System.out.println("No work available!");
+            logger.log(Level.INFO, "No work available!");
             return null;
         }
     }
@@ -67,10 +72,8 @@ public class WorkManager {
      */
     public int getPendingWorkLength() {
         int pendingWorkLength = 0;
-        Work currentWork;
-        for (Object o : pendingWork) {
-            currentWork = (Work) o;
-            pendingWorkLength += currentWork.getDuration();
+        for (Work work : pendingWork) {
+            pendingWorkLength += work.getDuration();
         }
         return pendingWorkLength;
     }
@@ -129,9 +132,9 @@ public class WorkManager {
      */
     public void workComplete(Work completedWork) {
         if (currentWork.remove(completedWork)) {
-            System.out.println("Work removed from list");
+            logger.log(Level.INFO, "Work removed from list");
         } else {
-            System.out.println("Work not removed from list!");
+            logger.log(Level.INFO, "Work not removed from list!");
         }
     }
 }

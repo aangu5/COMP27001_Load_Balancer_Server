@@ -6,16 +6,21 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Node extends Thread {
-    private InetAddress nodeIPAddress;          //IP address of the Node
-    private int nodeID;                         //unique identifier of the Node
-    private int nodePort;                       //Port that the Node uses to receive messages on
-    private int maxJobs;                        //integer representing the max number of jobs the Node can carry out at once
+
+    private static final Logger logger = Logger.getLogger(Node.class.getName());
+
+    private final InetAddress nodeIPAddress;          //IP address of the Node
+    private final int nodeID;                         //unique identifier of the Node
+    private final int nodePort;                       //Port that the Node uses to receive messages on
+    private final int maxJobs;                        //integer representing the max number of jobs the Node can carry out at once
     private int currentJobs;                    //integer representing the current number of jobs the Node is working on currently
     private long lastCheckIn;                   //long representing the most recent Node check in using Unix time
     private boolean nodeOnline;                 //boolean representing whether the Node is online or not
-    private Server server;                      //Server object that this program is running on
+    private final Server server;                      //Server object that this program is running on
 
     /**
      * Node constructor that sets local variables and outputs to the console that there is a new node added.
@@ -34,7 +39,7 @@ public class Node extends Thread {
         lastCheckIn = Instant.now().getEpochSecond();
         nodeOnline = true;
         server = inputServer;
-        System.out.println("New machine - ID: " + nodeID + " IP: " + getNodeIPAddress().getHostAddress() + " PORT: " + getNodePort() + " job limit: " + getMaxJobs() );
+        logger.log(Level.INFO, "New machine - ID: {}, IP: {}, PORT: {}, Job Limit: {}", new Object[] {nodeID, getNodeIPAddress().getHostAddress(), getNodePort(), getMaxJobs() });
         start();
     }
     public InetAddress getNodeIPAddress(){ return nodeIPAddress; }                          //getter for Node IP address
@@ -54,11 +59,9 @@ public class Node extends Thread {
      * @param message - String of the message to send to the Node
      */
     public void sendMessageToNode(String message) {
-        try {
+        try (DatagramSocket socket = new DatagramSocket()){
             DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length, getNodeIPAddress(), getNodePort());
-            DatagramSocket socket = new DatagramSocket();
             socket.send(packet);
-            socket.close();
         } catch (Exception error) {
             error.printStackTrace();
         }
@@ -68,26 +71,23 @@ public class Node extends Thread {
      * This is the node check in process - once every "timeout" seconds, the server will send a message to the Node asking for a check in.
      * If the Node responds, the check in time gets updated.
      * Then it sleeps for the timeout period and checks whether the Node check in was successful by comparing the current time and the lastCheckIn.
-     * If the Node doesn't respond, this function sends a message to the Server to let it know that there is a deadnode.
+     * If the Node doesn't respond, this function sends a message to the Server to let it know that there is a dead node.
      */
     @Override
     public void run() {
         while (nodeOnline) {
-            System.out.println("Node check in status is: " + lastCheckIn);
+            logger.log(Level.INFO, "Node check in status is: {}", lastCheckIn);
             //time delay between Node status checks
             int timeout = 60;
             if (lastCheckIn < (Instant.now().getEpochSecond() - (timeout + timeout / 2))) {
-                    System.out.println("Looks like we have a node that isn't responding! Attempting to shutdown the node....");
+                    logger.log(Level.WARNING, "Looks like we have a node that is not responding! Attempting to shutdown the node....");
                     sendMessageToNode("SHUTDOWN");
                     nodeOnline = false;
-                    System.out.println("Node not responding - potential error!");
+                    logger.log(Level.SEVERE, "Node not responding - potential error!");
                     String message = "DEADNODE," + nodeIPAddress.getHostAddress() + "," + nodePort;
                     DatagramPacket packet = new DatagramPacket(message.getBytes(),message.getBytes().length, server.getServerIP(),server.getServerPort());
-                    DatagramSocket socket;
-                    try {
-                        socket = new DatagramSocket();
+                    try (DatagramSocket socket = new DatagramSocket()){
                         socket.send(packet);
-                        socket.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
